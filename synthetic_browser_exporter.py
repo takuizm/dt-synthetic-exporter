@@ -889,42 +889,42 @@ def main():
         
         # CSV出力（既存機能）
         csv_file = exporter.export_to_csv(df, f'{base_name}.csv')
-        print(f"✅ CSV出力: {csv_file}")
+        print(f"CSV出力: {csv_file}")
         
         # サマリーレポート生成・出力（既存機能）
         summary = exporter.generate_comprehensive_summary(df)
         summary_file = exporter.export_summary_report(summary, f'{base_name}_summary.json')
-        print(f"✅ サマリーレポート: {summary_file}")
+        print(f"サマリーレポート: {summary_file}")
         
         # 監視対象別分析（新機能）
         if args.monitor_analysis:
-            print(f"\n🔍 監視対象別分析を実行中...")
+            print(f"\n監視対象別分析を実行中...")
             
             # 監視対象別分析レポート生成
             monitor_analysis = exporter.generate_monitor_analysis(df)
             
             # JSON出力
             monitor_json_file = exporter.export_monitor_analysis_json(monitor_analysis, f'{base_name}_monitor_analysis.json')
-            print(f"✅ 監視対象別分析JSON: {monitor_json_file}")
+            print(f"監視対象別分析JSON: {monitor_json_file}")
             
             # 詳細CSV出力
             monitor_csv_file = exporter.export_monitor_analysis_csv(df, f'{base_name}_monitor_analysis.csv')
-            print(f"✅ 監視対象別分析CSV: {monitor_csv_file}")
+            print(f"監視対象別分析CSV: {monitor_csv_file}")
             
             # サマリーCSV出力
             monitor_summary_file = exporter.export_monitor_summary_csv(df, f'{base_name}_monitor_summary.csv')
-            print(f"✅ 監視対象別サマリーCSV: {monitor_summary_file}")
+            print(f"監視対象別サマリーCSV: {monitor_summary_file}")
             
             # 監視対象別統計表示
-            print(f"\n📊 監視対象別統計:")
+            print(f"\n監視対象別統計:")
             for monitor_name in df['monitor_name'].unique():
                 monitor_data = df[df['monitor_name'] == monitor_name]
                 print(f"   {monitor_name}: {len(monitor_data):,} レコード, {monitor_data['metric_name'].nunique()} メトリクス")
         else:
-            print(f"\n💡 監視対象別分析を実行するには --monitor-analysis オプションを使用してください")
+            print(f"\n監視対象別分析を実行するには --monitor-analysis オプションを使用してください")
         
         # コンソール表示
-        print(f"\n📊 最終版Browser監視結果サマリー:")
+        print(f"\n最終版Browser監視結果サマリー:")
         print(f"   総レコード数: {len(df):,}")
         print(f"   監視数: {df['monitor_name'].nunique()}")
         print(f"   メトリクス数: {df['metric_name'].nunique()}")
@@ -932,7 +932,7 @@ def main():
         
         # カテゴリ別統計
         if 'metric_category' in df.columns:
-            print(f"\n📈 カテゴリ別統計:")
+            print(f"\nカテゴリ別統計:")
             category_stats = df.groupby('metric_category').size().sort_values(ascending=False)
             for category, count in category_stats.items():
                 print(f"   {category}: {count:,} レコード")
@@ -940,7 +940,7 @@ def main():
         # パフォーマンス状況
         if 'performance_status' in df.columns:
             perf_counts = df['performance_status'].value_counts()
-            print(f"\n📈 パフォーマンス状況:")
+            print(f"\nパフォーマンス状況:")
             for status, count in perf_counts.items():
                 print(f"   {status}: {count:,} レコード")
         
