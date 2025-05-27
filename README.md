@@ -1,590 +1,358 @@
 # Dynatrace Synthetic Browser監視データエクスポーター
-**完全ガイド：環境構築から実行まで**  
-作成日: 2025-01-26  
-バージョン: 2.0
+**プロフェッショナル・ガイド：環境構築から運用まで**  
+作成日: 2025-01-27  
+バージョン: 2.1
 
-## このツールについて
+## 概要
 
-このツールは、Dynatrace のSynthetic Browser監視データを簡単にExcelで分析できるCSVファイルにエクスポートするツールです。  
-**67種類のパフォーマンスメトリクス**を自動収集し、Web サイトの性能分析レポートを生成します。
+このツールは、Dynatrace のSynthetic Browser監視データをCSVファイルにエクスポートし、Excel等での詳細分析を可能にするツールです。67種類のパフォーマンスメトリクスを自動収集し、Webサイトの性能分析レポートを生成します。
 
-### こんな方におすすめ
-- Webサイトのパフォーマンスを定期的に分析したい
-- Dynatrace のデータをExcelで詳しく分析したい
-- 複数の監視結果を一度にまとめて確認したい
-- 技術的な詳細は分からないが、分析結果だけ欲しい
+### 適用範囲
+- Webサイトのパフォーマンスを定期的に分析する業務
+- Dynatrace データのExcel詳細分析
+- 複数監視結果の一括確認・レポート作成
+- 技術的詳細を不要とする分析業務
 
-### 対応OS
+### 対応環境
 - **macOS**: macOS 10.14以上
 - **Windows**: Windows 10以上 
-- **Linux**: Ubuntu 18.04以上（上級者向け）
+- **Linux**: Ubuntu 18.04以上
 
-### 取得できるデータ
-- **Core Web Vitals**: LCP、CLS（Googleの推奨指標）
+### 取得データ
+- **Core Web Vitals**: LCP、CLS（Google推奨指標）
 - **ページパフォーマンス**: ロード時間、Speed Index、表示完了時間
 - **ネットワーク分析**: TTFB、レスポンス時間、サーバー負荷
 - **可用性データ**: 成功率、失敗率、地域別データ
 
 ---
 
-## **STEP 1: 環境構築（初回のみ）**
+## 環境構築
 
-### 1-1. 必要なソフトウェアの確認
+### 前提条件
 
-#### Python の確認
-
-**macOS の場合:**
-1. **Finderを開く** → **アプリケーション** → **ユーティリティ** → **ターミナル**をダブルクリック
-2. 以下のコマンドを入力してEnterキーを押す：
-   ```bash
-   python3 --version
-   ```
-
-**Windows の場合:**
-1. **スタートメニュー** → **「cmd」と入力** → **コマンドプロンプト**をクリック
-2. 以下のコマンドを入力してEnterキーを押す：
-   ```cmd
-   python --version
-   ```
-   または
-   ```cmd
-   py --version
-   ```
-
-**成功条件:**
-`Python 3.x.x` と表示されればOK（3.8以上推奨）
-
-**エラーが出た場合:**
-- [Python公式サイト](https://www.python.org/downloads/)からPython 3をダウンロード・インストール
-- インストール後、コマンドプロンプト/ターミナルを再起動して再度確認
-
-#### ファイルのダウンロード確認
-1. このプロジェクトフォルダが完全にダウンロードされていることを確認
-2. 以下のファイルが揃っていることを確認：
-   - `README.md`（このファイル）
-   - `synthetic_browser_exporter.py`
-   - `requirements.txt`
-   - `run_synthetic_exporter.sh`
-   - `.env.template`
-
-### 1-2. プロジェクトフォルダに移動
-
-**macOS の場合:**
-1. **ターミナル**で、プロジェクトフォルダに移動：
-   ```bash
-   cd ~/Downloads/dt-synthetic-exporter
-   ```
-   **ヒント**: フォルダをターミナルにドラッグ&ドロップすると自動でパスが入力されます
-
-2. 正しいフォルダにいるかチェック：
-   ```bash
-   ls -la
-   ```
-
-**Windows の場合:**
-1. **コマンドプロンプト**で、プロジェクトフォルダに移動：
-   ```cmd
-   cd %USERPROFILE%\Downloads\dt-synthetic-exporter
-   ```
-   または
-   ```cmd
-   cd C:\Users\あなたのユーザー名\Downloads\dt-synthetic-exporter
-   ```
-
-2. 正しいフォルダにいるかチェック：
-   ```cmd
-   dir
-   ```
-
-**成功条件:**
-上記で確認したファイルが表示されればOK
-
-### 1-3. Pythonライブラリのインストール
-
-**macOS の場合:**
-```bash
-# 必要なライブラリを一括インストール
-pip3 install -r requirements.txt
-
-# インストール成功の確認
-python3 -c "import requests, pandas; print('ライブラリインストール成功')"
-```
-
-**Windows の場合:**
-```cmd
-# 必要なライブラリを一括インストール
-pip install -r requirements.txt
-
-# インストール成功の確認
-python -c "import requests, pandas; print('ライブラリインストール成功')"
-```
-
-**エラーが出た場合:**
+#### Python環境の確認
 
 **macOS:**
 ```bash
-pip3 install requests>=2.28.0
-pip3 install python-dotenv>=0.19.0
-pip3 install pytz>=2021.3
-pip3 install pandas
+# ターミナルを開いて実行
+python3 --version
 ```
 
 **Windows:**
 ```cmd
-pip install requests>=2.28.0
-pip install python-dotenv>=0.19.0
-pip install pytz>=2021.3
-pip install pandas
+# コマンドプロンプトを開いて実行
+python --version
 ```
 
-### 1-4. Dynatrace API設定
+Python 3.8以上が表示されることを確認してください。インストールされていない場合は[Python公式サイト](https://www.python.org/downloads/)からダウンロード・インストールを行ってください。
 
-#### API トークンの取得
-1. **Dynatrace環境**にログイン
-2. **Settings** → **Integration** → **Dynatrace API** → **API tokens**
-3. **Generate token**をクリック
-4. **Token name**: `SyntheticExporter` などの分かりやすい名前
-5. **必要な権限**にチェック：
+#### 必要ファイルの確認
+以下のファイルが含まれていることを確認してください：
+- `README.md`（このファイル）
+- `synthetic_browser_exporter.py`
+- `requirements.txt`
+- `run_synthetic_exporter.sh`
+- `.env.template`
+
+### インストール手順
+
+#### 1. プロジェクトディレクトリへの移動
+
+**macOS:**
+```bash
+cd ~/Downloads/dt-synthetic-exporter
+ls -la  # ファイル存在確認
+```
+
+**Windows:**
+```cmd
+cd %USERPROFILE%\Downloads\dt-synthetic-exporter
+dir     # ファイル存在確認
+```
+
+#### 2. 依存ライブラリのインストール
+
+**macOS:**
+```bash
+pip3 install -r requirements.txt
+python3 -c "import requests, pandas; print('インストール完了')"
+```
+
+**Windows:**
+```cmd
+pip install -r requirements.txt
+python -c "import requests, pandas; print('インストール完了')"
+```
+
+#### 3. Dynatrace API設定
+
+##### APIトークンの取得
+1. Dynatrace環境にログイン
+2. Settings → Integration → Dynatrace API → API tokens
+3. Generate tokenをクリック
+4. Token name: `SyntheticExporter`等の識別可能な名前を設定
+5. 必要な権限を付与：
    - `Read synthetic monitors`
    - `Read metrics`
    - `Read entities`
-6. **Generate**をクリックし、トークンをコピー（**必ず保存してください**）
+6. Generateをクリックし、トークンを安全に保存
 
-#### 環境設定ファイル作成
+##### 環境設定ファイルの作成
 
-**macOS の場合:**
+**macOS:**
 ```bash
-# 設定ファイルをコピー
 cp .env.template .env
-
-# 設定ファイルを編集
 open .env
 ```
 
-**Windows の場合:**
+**Windows:**
 ```cmd
-# 設定ファイルをコピー
 copy .env.template .env
-
-# 設定ファイルを編集
 notepad .env
 ```
 
-**両OS共通の編集内容:**
-テキストエディタが開いたら、以下のように編集：
+テキストエディタで以下のように編集してください：
 ```
-DT_API_TOKEN=dt0c01.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+DT_API_TOKEN=取得したAPIトークン
 DT_ENV_URL=https://あなたのテナント.dynatrace.com
 ```
 
-**注意事項**:
-- `DT_API_TOKEN=` の後に取得したAPIトークンを貼り付け
-- `DT_ENV_URL=` の後にDynatraceテナントのURLを入力
-- **スペースは入れない**
-- **クォートは不要**
+注意事項：
+- 等号（=）の前後にスペースを入れない
+- クォートは使用しない
+- APIトークンとURLは正確に入力
 
-**保存方法:**
-- **macOS**: Command+S で保存し、テキストエディットを閉じる
-- **Windows**: Ctrl+S で保存し、メモ帳を閉じる
+#### 4. 動作確認
 
-#### 設定確認
+**macOS:**
 ```bash
-python3 -c "
-import os
-from pathlib import Path
-env_file = Path('.env')
-if env_file.exists():
-    with open(env_file, 'r') as f:
-        for line in f:
-            if '=' in line and not line.startswith('#'):
-                key, value = line.strip().split('=', 1)
-                if key == 'DT_API_TOKEN':
-                    print(f'APIトークン: {value[:20]}...')
-                elif key == 'DT_ENV_URL':
-                    print(f'環境URL: {value}')
-else:
-    print('.envファイルが見つかりません')
-"
+chmod +x run_synthetic_exporter.sh
+python3 synthetic_browser_exporter.py --hours 1
 ```
+
+**Windows:**
+```cmd
+python synthetic_browser_exporter.py --hours 1
+```
+
+正常に動作する場合、`output/`ディレクトリにCSVファイルが生成されます。
 
 ---
 
-## **STEP 2: 基本的な使い方**
+## 基本的な使用方法
 
-### 2-1. 最も簡単な実行方法
+### 標準実行
 
-**macOS の場合:**
+**最も基本的な実行（推奨）:**
 ```bash
-# シンプル実行（過去72時間のデータを全て取得）
+# macOS
 ./run_synthetic_exporter.sh
-```
 
-**初回実行時**: 実行権限のエラーが出た場合：
-```bash
-chmod +x run_synthetic_exporter.sh
-./run_synthetic_exporter.sh
-```
-
-**Windows の場合:**
-```cmd
-# 簡単実行（バッチファイル使用）
-run_synthetic_exporter.bat
-```
-
-または
-
-```cmd
-# Pythonで直接実行
+# Windows
 python synthetic_browser_exporter.py
 ```
 
-**Windows補足**: 
-- `run_synthetic_exporter.bat` はWindows用の簡単実行ファイルです
-- macOSの `.sh` ファイルと同等の機能を提供します
+過去72時間のデータを取得し、結果をCSVファイルとして出力します。
 
-### 2-2. 実行結果の確認
+### 出力ファイル
 
-成功すると以下のファイルが `output/` フォルダに生成されます：
+実行完了後、`output/`ディレクトリに以下のファイルが生成されます：
 
-#### **メインファイル**
-- **`ultimate_browser_results_YYYYMMDD_HHMMSS.csv`**
-  - 全データの詳細
-  - **Excel で開いて分析可能**
+- **`ultimate_browser_results_YYYYMMDD_HHMMSS.csv`**: 詳細データ（Excel分析用）
+- **`ultimate_browser_results_YYYYMMDD_HHMMSS_summary.json`**: 統計サマリー
 
-#### **サマリーファイル**
-- **`ultimate_browser_results_YYYYMMDD_HHMMSS_summary.json`**  
-  - 統計サマリー
-  - パフォーマンス評価結果
+### 結果確認
 
-#### **ログファイル**
-- **`.logs/ultimate_browser_export_*.log`**
-  - 実行ログ（エラー時の確認用）
-
-### 2-3. 結果ファイルの開き方
-
-**macOS の場合:**
+**macOS:**
 ```bash
-# CSVファイルをExcelで開く
 open output/ultimate_browser_results_*.csv
-
-# サマリーをテキストエディットで確認
-open output/ultimate_browser_results_*_summary.json
 ```
 
-**Windows の場合:**
+**Windows:**
 ```cmd
-# CSVファイルをExcelで開く
 start output\ultimate_browser_results_*.csv
-
-# サマリーをメモ帳で確認
-start notepad output\ultimate_browser_results_*_summary.json
 ```
-
-**両OS共通**: エクスプローラー/Finderで `output` フォルダを開いて、ファイルをダブルクリックでも開けます
 
 ---
 
-## **STEP 3: カスタム実行（応用編）**
+## 応用的な使用方法
 
-### 3-1. よく使うオプション組み合わせ
+### よく使用されるオプション
 
-#### **特定タグの監視のみ取得**
-**macOS:**
+#### 期間指定
 ```bash
-python3 synthetic_browser_exporter.py --tag Owner:Koizumi
-```
-**Windows:**
-```cmd
-python synthetic_browser_exporter.py --tag Owner:Koizumi
+python3 synthetic_browser_exporter.py --hours 24    # 過去24時間
+python3 synthetic_browser_exporter.py --hours 168   # 過去1週間
 ```
 
-#### **期間を指定（過去48時間）**
-**macOS:**
+#### タグフィルタリング
 ```bash
-python3 synthetic_browser_exporter.py --hours 48
-```
-**Windows:**
-```cmd
-python synthetic_browser_exporter.py --hours 48
+python3 synthetic_browser_exporter.py --tag Owner:TeamName
+python3 synthetic_browser_exporter.py --tag Environment:Production
 ```
 
-#### **高解像度データ（15分間隔）**
-**macOS:**
+#### データ解像度設定
 ```bash
-python3 synthetic_browser_exporter.py --resolution 15m
-```
-**Windows:**
-```cmd
-python synthetic_browser_exporter.py --resolution 15m
+python3 synthetic_browser_exporter.py --resolution 15m   # 15分間隔
+python3 synthetic_browser_exporter.py --resolution 1h    # 1時間間隔
 ```
 
-#### **軽量化実行（地域データ除外）**
-**macOS:**
-```bash
-python3 synthetic_browser_exporter.py --no-geo
-```
-**Windows:**
-```cmd
-python synthetic_browser_exporter.py --no-geo
-```
-
-#### **監視別詳細分析付き**
-**macOS:**
+#### 監視別詳細分析
 ```bash
 python3 synthetic_browser_exporter.py --monitor-analysis
 ```
-**Windows:**
-```cmd
-python synthetic_browser_exporter.py --monitor-analysis
+
+#### 高速化オプション
+```bash
+python3 synthetic_browser_exporter.py --no-geo  # 地域データ除外
 ```
 
-### 3-2. 複合オプション例
+### 定期レポート作成例
 
-#### **日次レポート作成**
+#### 日次レポート
 ```bash
 python3 synthetic_browser_exporter.py \
   --hours 24 \
   --resolution 1h \
-  --output daily_report_$(date +%Y%m%d) \
-  --monitor-analysis
+  --output daily_report_$(date +%Y%m%d)
 ```
 
-#### **特定環境の週次詳細分析**
+#### 週次詳細分析
 ```bash
 python3 synthetic_browser_exporter.py \
   --tag Environment:Production \
   --hours 168 \
   --resolution 30m \
-  --output weekly_prod_analysis \
+  --output weekly_analysis \
   --monitor-analysis
 ```
 
-### 3-3. オプション一覧表
-
-| オプション | 説明 | 例 | 初心者おすすめ度 |
-|-----------|------|-----|----------------|
-| `--tag` | 特定タグのみ取得 | `--tag Owner:Koizumi` | おすすめ |
-| `--hours` | 取得期間指定 | `--hours 48` | おすすめ |
-| `--resolution` | データ間隔 | `--resolution 30m` | 中級者 |
-| `--output` | ファイル名指定 | `--output my_analysis` | おすすめ |
-| `--no-geo` | 地域データ除外（高速化） | `--no-geo` | 中級者 |
-| `--monitor-analysis` | 監視別詳細分析 | `--monitor-analysis` | 上級者 |
-
 ---
 
-## **STEP 4: データの見方・分析方法**
+## データ分析
 
-### 4-1. CSVファイルの主要カラム説明
+### CSVファイルの主要カラム
 
-| カラム名 | 意味 | 使い方 |
-|---------|------|-------|
-| `timestamp` | 測定日時 | グラフのX軸に使用 |
-| `monitor_name` | 監視の名前 | 監視別にフィルタリング |
-| `monitor_url` | 監視対象URL | どのサイトのデータか確認 |
-| `metric_display_name` | メトリクス名（日本語） | 何の指標かを確認 |
-| `value` | 測定値 | 分析の基本データ |
-| `unit` | 単位 | ms（ミリ秒）、%（パーセント）など |
-| `performance_status` | 評価 | Good/Warning/Critical |
+| カラム名 | 内容 | 用途 |
+|---------|------|------|
+| `timestamp` | 測定日時 | 時系列分析 |
+| `monitor_name` | 監視名 | 監視別フィルタリング |
+| `monitor_url` | 監視対象URL | 対象サイト確認 |
+| `metric_display_name` | メトリクス名 | 指標種別確認 |
+| `value` | 測定値 | 分析対象データ |
+| `unit` | 単位 | 数値の解釈 |
 
-### 4-2. パフォーマンス評価基準
+### 性能評価基準
 
-#### **Good（良好）**
+#### 良好な範囲
+- **ページロード時間**: 3.0秒以下
 - **LCP（最大コンテンツ描画）**: 2.5秒以下
 - **CLS（レイアウトシフト）**: 0.1以下
-- **ページロード時間**: 3.0秒以下
 - **可用性**: 99%以上
 
-#### **Warning（注意）**
+#### 注意が必要な範囲
+- **ページロード時間**: 3.0〜5.0秒
 - **LCP**: 2.5〜4.0秒
 - **CLS**: 0.1〜0.25
-- **ページロード時間**: 3.0〜5.0秒
 - **可用性**: 95〜99%
 
-#### **Critical（要改善）**
+#### 改善が必要な範囲
+- **ページロード時間**: 5.0秒超
 - **LCP**: 4.0秒超
 - **CLS**: 0.25超
-- **ページロード時間**: 5.0秒超
 - **可用性**: 95%未満
 
-### 4-3. Excelでの分析手順
+### Excel分析の基本手順
 
-#### **基本分析**
-1. **CSVをExcelで開く**
-2. **データタブ** → **テーブルとして書式設定**
-3. **フィルター機能**を使って分析：
-   - `monitor_name` で特定の監視をフィルタ
-   - `performance_status` で問題のあるデータを確認
-   - `metric_display_name` で特定指標を抽出
+詳細な分析方法については `docs/分析方法ガイド_20250127_v1.md` を参照してください。
 
-#### **グラフ作成**
-1. **時系列グラフ**:
-   - X軸: `timestamp`
-   - Y軸: `value`
-   - 系列: `metric_display_name`
-
-2. **監視比較グラフ**:
-   - X軸: `monitor_name`
-   - Y軸: `value` の平均
-   - 系列: `metric_display_name`
+1. CSVファイルをExcelで開く
+2. データをテーブル形式に変換
+3. フィルター機能を使用して対象データを絞り込み
+4. 時系列グラフを作成してトレンド分析を実施
+5. 監視別比較分析を実行
 
 ---
 
-## **トラブルシューティング**
+## トラブルシューティング
 
-### よくあるエラーと解決方法
+### よくある問題と解決方法
 
-#### **「環境変数が設定されていません」**
-```bash
-# .envファイルの確認
-cat .env
+#### 「環境変数が設定されていません」
+**原因**: `.env`ファイルの設定に問題があります  
+**解決方法**: 
+1. `.env`ファイルの存在確認
+2. APIトークンとURLの正確性確認
+3. ファイル保存の確認
 
-# 正しく設定されているかチェック
-python3 -c "
-import os
-from pathlib import Path
-env_file = Path('.env')
-if env_file.exists():
-    print('.envファイル存在')
-    with open(env_file) as f:
-        content = f.read()
-        if 'DT_API_TOKEN=' in content and 'DT_ENV_URL=' in content:
-            print('設定項目確認')
-        else:
-            print('設定項目不足')
-else:
-    print('.envファイル不存在')
-"
-```
-
-**解決方法**: STEP 1-4 を再実行
-
-#### **「データが取得できませんでした」**
-
-**原因チェック**:
-```bash
-python3 -c "
-import os
-from pathlib import Path
-# .env読み込み
-env_file = Path('.env')
-if env_file.exists():
-    with open(env_file, 'r') as f:
-        for line in f:
-            if '=' in line and not line.startswith('#'):
-                key, value = line.strip().split('=', 1)
-                os.environ[key] = value
-
-import requests
-api_token = os.getenv('DT_API_TOKEN')
-env_url = os.getenv('DT_ENV_URL')
-try:
-    response = requests.get(f'{env_url}/api/v1/synthetic/monitors', 
-                           headers={'Authorization': f'Api-Token {api_token}'})
-    if response.status_code == 200:
-        monitors = response.json().get('monitors', [])
-        browser_monitors = [m for m in monitors if m.get('type') == 'BROWSER']
-        print(f'接続成功: Browser監視数 {len(browser_monitors)}')
-        for m in browser_monitors[:3]:  # 最初の3件表示
-            print(f'  - {m[\"name\"]}')
-    else:
-        print(f'API接続エラー: {response.status_code}')
-        print(f'レスポンス: {response.text[:200]}')
-except Exception as e:
-    print(f'接続エラー: {e}')
-"
-```
-
+#### 「データが取得できませんでした」
+**原因**: API接続またはBrowser監視の設定に問題があります  
 **解決方法**:
-1. APIトークンの権限を再確認
-2. DynatraceテナントURLが正しいか確認
-3. ネットワーク接続を確認
+1. APIトークンの権限確認
+2. DynatraceテナントURLの確認
+3. ネットワーク接続の確認
 
-#### **「ライブラリがインストールできない」**
+#### 「ライブラリがインストールできない」
+**原因**: Python環境またはネットワークの問題です  
+**解決方法**:
 ```bash
-# pip のアップグレード
 pip3 install --upgrade pip
-
-# 個別インストール試行
-pip3 install requests
-pip3 install pandas
-pip3 install python-dotenv
-pip3 install pytz
+pip3 install requests pandas python-dotenv pytz
 ```
 
-#### **「メモリ不足」**
+#### 「Permission denied」
+**原因**: 実行権限の問題です  
+**解決方法**:
 ```bash
-# 軽量化オプションで実行
-python3 synthetic_browser_exporter.py --no-geo --hours 12 --resolution 4h
-```
-
-#### **「Permission denied」（権限エラー）**
-```bash
-# 実行権限付与
 chmod +x run_synthetic_exporter.sh
+```
 
-# または直接Python実行
-python3 synthetic_browser_exporter.py
+### ログファイルの確認
+
+エラーの詳細は `.logs/` ディレクトリ内のログファイルで確認できます：
+```bash
+tail -20 .logs/ultimate_browser_export_*.log
 ```
 
 ---
 
-## **日常的な使い方（推奨パターン）**
+## 運用推奨パターン
 
-### **毎日の定期チェック**
+### 定期監視
 ```bash
-# 毎朝実行して前日のパフォーマンスをチェック
-python3 synthetic_browser_exporter.py \
-  --hours 24 \
-  --resolution 1h \
-  --output daily_$(date +%Y%m%d)
+# 毎日の性能チェック
+python3 synthetic_browser_exporter.py --hours 24 --resolution 1h
+
+# 週次詳細レポート
+python3 synthetic_browser_exporter.py --hours 168 --resolution 30m --monitor-analysis
 ```
 
-### **週次レポート作成**
+### 問題調査
 ```bash
-# 毎週月曜日に過去1週間の詳細分析
-python3 synthetic_browser_exporter.py \
-  --hours 168 \
-  --resolution 30m \
-  --output weekly_$(date +%Y%m%d) \
-  --monitor-analysis
+# 高解像度データでの詳細調査
+python3 synthetic_browser_exporter.py --hours 6 --resolution 5m
 ```
 
-### **問題調査時**
-```bash
-# 特定期間の高解像度データ取得
-python3 synthetic_browser_exporter.py \
-  --hours 6 \
-  --resolution 5m \
-  --output incident_analysis_$(date +%Y%m%d_%H%M)
-```
-
-### **特定監視のみチェック**
+### 特定環境監視
 ```bash
 # 本番環境のみ
 python3 synthetic_browser_exporter.py --tag Environment:Production
 
-# 特定オーナーのみ
-python3 synthetic_browser_exporter.py --tag Owner:あなたの名前
+# 特定チーム担当監視のみ
+python3 synthetic_browser_exporter.py --tag Owner:TeamName
 ```
 
 ---
 
-## **サポート・問い合わせ**
+## サポート
 
-### **問い合わせ前のチェックリスト**
-1. 最新のログファイル（`.logs/`フォルダ内）を確認
-2. `.env` ファイルの設定を再確認
-3. Dynatrace環境への接続を確認
-4. Python とライブラリのバージョンを確認
+### 問い合わせ前の確認事項
+1. 最新のログファイル内容の確認
+2. `.env`ファイル設定の再確認  
+3. Dynatrace環境への接続確認
+4. Pythonとライブラリのバージョン確認
 
-### **ログファイルの場所**
-```bash
-# 最新のログを確認
-ls -la .logs/
-tail -20 .logs/ultimate_browser_export_*.log
-```
-
-### **デバッグ実行**
+### デバッグ実行
 詳細なエラー情報が必要な場合：
 ```bash
 python3 synthetic_browser_exporter.py --hours 1 2>&1 | tee debug_output.txt
@@ -592,26 +360,8 @@ python3 synthetic_browser_exporter.py --hours 1 2>&1 | tee debug_output.txt
 
 ---
 
-## **まとめ**
+## まとめ
 
-このツールを使用することで、Dynatrace Synthetic Browser監視の**67種類のメトリクス**を簡単にExcel分析できるCSVファイルとしてエクスポートできます。
+本ツールにより、Dynatrace Synthetic Browser監視の67種類のメトリクスを効率的にExcel分析可能な形式で取得できます。定期的な性能監視、詳細な問題分析、包括的なレポート作成に活用してください。
 
-### **覚えておくべき基本コマンド**
-```bash
-# 最も基本的な実行
-./run_synthetic_exporter.sh
-
-# 特定タグのみ（最も使用頻度が高い）
-python3 synthetic_browser_exporter.py --tag Owner:あなたの名前
-
-# 期間指定（2番目に使用頻度が高い）
-python3 synthetic_browser_exporter.py --hours 48
-```
-
-### **活用のコツ**
-1. **定期実行**: 毎日/毎週決まった時間に実行
-2. **タグ活用**: 自分担当の監視のみフィルタリング
-3. **Excel分析**: フィルター機能とグラフ機能をフル活用
-4. **トレンド分析**: 時系列データで傾向を把握
-
-**これで完璧にSynthetic監視データ分析ができます！** 
+基本的な実行方法を習得後、業務要件に応じてオプションパラメータを活用し、効果的なWebサイト性能分析を実施してください。 

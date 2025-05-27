@@ -119,17 +119,13 @@ class UltimateBrowserExporterV2:
             'display_name': 'Largest Contentful Paint (LCP)',
             'description': '最大コンテンツの描画時間',
             'unit': 'ms',
-            'category': 'Core Web Vitals',
-            'good_threshold': 2500,
-            'warning_threshold': 4000
+            'category': 'Core Web Vitals'
         },
         'builtin:synthetic.browser.cumulativeLayoutShift.load': {
             'display_name': 'Cumulative Layout Shift (CLS)',
             'description': 'レイアウトシフトの累積スコア',
             'unit': 'score',
-            'category': 'Core Web Vitals',
-            'good_threshold': 0.1,
-            'warning_threshold': 0.25
+            'category': 'Core Web Vitals'
         },
         
         # Performance Metrics
@@ -137,41 +133,31 @@ class UltimateBrowserExporterV2:
             'display_name': 'ページロード時間',
             'description': 'ページの完全ロードにかかる時間',
             'unit': 'ms',
-            'category': 'パフォーマンス',
-            'good_threshold': 3000,
-            'warning_threshold': 5000
+            'category': 'パフォーマンス'
         },
         'builtin:synthetic.browser.speedIndex.load': {
             'display_name': 'Speed Index',
             'description': 'ページの視覚的な読み込み速度',
             'unit': 'ms',
-            'category': 'パフォーマンス',
-            'good_threshold': 3400,
-            'warning_threshold': 5800
+            'category': 'パフォーマンス'
         },
         'builtin:synthetic.browser.visuallyComplete.load': {
             'display_name': 'Visually Complete',
             'description': 'ビューポートの完全な描画時間',
             'unit': 'ms',
-            'category': 'パフォーマンス',
-            'good_threshold': 4000,
-            'warning_threshold': 6000
+            'category': 'パフォーマンス'
         },
         'builtin:synthetic.browser.firstByte.load': {
             'display_name': 'Time to First Byte (TTFB)',
             'description': '最初のバイト受信時間',
             'unit': 'ms',
-            'category': 'ネットワーク',
-            'good_threshold': 800,
-            'warning_threshold': 1800
+            'category': 'ネットワーク'
         },
         'builtin:synthetic.browser.domInteractive.load': {
             'display_name': 'DOM Interactive',
             'description': 'DOMが操作可能になるまでの時間',
             'unit': 'ms',
-            'category': 'パフォーマンス',
-            'good_threshold': 2000,
-            'warning_threshold': 4000
+            'category': 'パフォーマンス'
         },
         
         # Availability
@@ -179,9 +165,7 @@ class UltimateBrowserExporterV2:
             'display_name': '可用性',
             'description': '監視の成功率',
             'unit': '%',
-            'category': '可用性',
-            'good_threshold': 99.0,
-            'warning_threshold': 95.0
+            'category': '可用性'
         }
     }
     
@@ -423,10 +407,7 @@ class UltimateBrowserExporterV2:
             'category': 'その他'
         })
         
-        # パフォーマンス評価
-        performance_status = self._evaluate_performance(
-            metric_id, value, metric_info
-        )
+        # パフォーマンス評価機能は削除（純粋なデータ提供に特化）
         
         # データポイントを記録（タイムスタンプをJSTに変換）
         jst = pytz.timezone('Asia/Tokyo')
@@ -447,7 +428,6 @@ class UltimateBrowserExporterV2:
             'metric_category': metric_info.get('category', 'その他'),
             'value': value,
             'unit': metric_info.get('unit', 'unknown'),
-            'performance_status': performance_status,
             'resolution': resolution
         }
         
@@ -461,38 +441,7 @@ class UltimateBrowserExporterV2:
         
         return record
     
-    def _evaluate_performance(self, metric_id: str, value: float, metric_info: Dict) -> str:
-        """パフォーマンス評価"""
-        good_threshold = metric_info.get('good_threshold')
-        warning_threshold = metric_info.get('warning_threshold')
-        
-        if good_threshold is None or warning_threshold is None:
-            return 'Unknown'
-        
-        # 可用性系は高い方が良い
-        if 'availability' in metric_id:
-            if value >= good_threshold:
-                return 'Good'
-            elif value >= warning_threshold:
-                return 'Warning'
-            else:
-                return 'Critical'
-        # CLSは低い方が良い（スコア）
-        elif 'cumulativeLayoutShift' in metric_id:
-            if value <= good_threshold:
-                return 'Good'
-            elif value <= warning_threshold:
-                return 'Warning'
-            else:
-                return 'Critical'
-        # その他のタイミング系は低い方が良い
-        else:
-            if value <= good_threshold:
-                return 'Good'
-            elif value <= warning_threshold:
-                return 'Warning'
-            else:
-                return 'Critical'
+    # パフォーマンス評価機能は削除（純粋なデータ提供に特化）
     
     def generate_comprehensive_summary(self, df: pd.DataFrame) -> Dict:
         """包括的サマリーレポート生成"""
@@ -515,8 +464,7 @@ class UltimateBrowserExporterV2:
                 'unique_metrics': df['metric_name'].nunique(),
                 'metrics_collected': df['metric_name'].unique().tolist()
             },
-            'performance_analysis': {},
-            'web_vitals_analysis': {},
+            'metrics_metadata': self.METRIC_INFO,
             'category_analysis': {}
         }
         
@@ -529,40 +477,20 @@ class UltimateBrowserExporterV2:
                 'monitors_measured': category_data['monitor_name'].nunique()
             }
         
-        # メトリクス別パフォーマンス分析
+        # メトリクス別基本統計（評価なし）
+        summary['metrics_statistics'] = {}
         for metric in df['metric_name'].unique():
             metric_data = df[df['metric_name'] == metric]
             
-            performance_counts = metric_data['performance_status'].value_counts().to_dict()
-            
-            summary['performance_analysis'][metric] = {
+            summary['metrics_statistics'][metric] = {
                 'total_measurements': len(metric_data),
-                'average_value': metric_data['value'].mean(),
-                'median_value': metric_data['value'].median(),
-                'min_value': metric_data['value'].min(),
-                'max_value': metric_data['value'].max(),
-                'std_value': metric_data['value'].std(),
-                'performance_distribution': performance_counts,
+                'average_value': float(metric_data['value'].mean()),
+                'median_value': float(metric_data['value'].median()),
+                'min_value': float(metric_data['value'].min()),
+                'max_value': float(metric_data['value'].max()),
+                'std_value': float(metric_data['value'].std()),
                 'monitors_measured': metric_data['monitor_name'].nunique()
             }
-        
-        # Core Web Vitals特別分析
-        web_vitals_metrics = [
-            'builtin:synthetic.browser.largestContentfulPaint.load',
-            'builtin:synthetic.browser.cumulativeLayoutShift.load'
-        ]
-        
-        for metric in web_vitals_metrics:
-            if metric in df['metric_name'].values:
-                metric_data = df[df['metric_name'] == metric]
-                good_count = len(metric_data[metric_data['performance_status'] == 'Good'])
-                total_count = len(metric_data)
-                
-                summary['web_vitals_analysis'][metric] = {
-                    'good_percentage': (good_count / total_count * 100) if total_count > 0 else 0,
-                    'total_measurements': total_count,
-                    'good_measurements': good_count
-                }
         
         return summary
     
@@ -642,8 +570,7 @@ class UltimateBrowserExporterV2:
                         'max_value': float(metric_data['value'].max()),
                         'average_value': float(metric_data['value'].mean()),
                         'median_value': float(metric_data['value'].median()),
-                        'std_value': float(metric_data['value'].std()) if len(metric_data) > 1 else 0.0,
-                        'performance_distribution': metric_data['performance_status'].value_counts().to_dict()
+                        'std_value': float(metric_data['value'].std()) if len(metric_data) > 1 else 0.0
                     }
             
             analysis['monitor_analysis'][monitor_name] = monitor_analysis
@@ -678,25 +605,6 @@ class UltimateBrowserExporterV2:
                     # メトリクス名を短縮（表示用）
                     short_metric = metric_name.replace('builtin:synthetic.browser.', '').replace('.load', '')
                     
-                    # パフォーマンス分布を計算
-                    perf_dist = metric_data['performance_status'].value_counts()
-                    good_count = perf_dist.get('Good', 0)
-                    warning_count = perf_dist.get('Warning', 0)
-                    critical_count = perf_dist.get('Critical', 0)
-                    unknown_count = perf_dist.get('Unknown', 0)
-                    
-                    # 主要なパフォーマンスグレードを決定
-                    total_graded = good_count + warning_count + critical_count
-                    if total_graded > 0:
-                        if good_count / total_graded >= 0.8:
-                            overall_grade = 'Good'
-                        elif critical_count / total_graded >= 0.1:
-                            overall_grade = 'Critical'
-                        else:
-                            overall_grade = 'Warning'
-                    else:
-                        overall_grade = 'Unknown'
-                    
                     analysis_rows.append({
                         'Monitor': monitor_name,
                         'Metric': short_metric,
@@ -705,12 +613,7 @@ class UltimateBrowserExporterV2:
                         'Average': round(metric_data['value'].mean(), 2),
                         'Median': round(metric_data['value'].median(), 2),
                         'StdDev': round(metric_data['value'].std(), 2) if len(metric_data) > 1 else 0.0,
-                        'Measurements': len(metric_data),
-                        'Good': good_count,
-                        'Warning': warning_count,
-                        'Critical': critical_count,
-                        'Unknown': unknown_count,
-                        'Performance_Grade': overall_grade
+                        'Measurements': len(metric_data)
                     })
         
         # DataFrameに変換してCSV出力
@@ -753,61 +656,11 @@ class UltimateBrowserExporterV2:
             # 可用性
             avg_availability = availability_data['value'].mean() if len(availability_data) > 0 else 0
             
-            # Web Vitals スコア計算
-            web_vitals_score = 'Unknown'
-            if len(lcp_data) > 0 and len(cls_data) > 0:
-                lcp_good = len(lcp_data[lcp_data['performance_status'] == 'Good']) / len(lcp_data)
-                cls_good = len(cls_data[cls_data['performance_status'] == 'Good']) / len(cls_data)
-                avg_vitals = (lcp_good + cls_good) / 2
-                
-                if avg_vitals >= 0.8:
-                    web_vitals_score = 'Good'
-                elif avg_vitals >= 0.5:
-                    web_vitals_score = 'Warning'
-                else:
-                    web_vitals_score = 'Critical'
-            
-            # 全体的なパフォーマンスグレード
-            all_perf = monitor_data['performance_status'].value_counts()
-            total_graded = all_perf.get('Good', 0) + all_perf.get('Warning', 0) + all_perf.get('Critical', 0)
-            
-            if total_graded > 0:
-                good_ratio = all_perf.get('Good', 0) / total_graded
-                critical_ratio = all_perf.get('Critical', 0) / total_graded
-                
-                if good_ratio >= 0.8:
-                    overall_grade = 'A'
-                elif good_ratio >= 0.6:
-                    overall_grade = 'B'
-                elif critical_ratio <= 0.1:
-                    overall_grade = 'C'
-                else:
-                    overall_grade = 'D'
-            else:
-                overall_grade = 'Unknown'
-            
-            # 主要な問題の特定
-            critical_metrics = monitor_data[monitor_data['performance_status'] == 'Critical']['metric_name'].unique()
-            if len(critical_metrics) > 0:
-                top_issue = f"Critical: {critical_metrics[0].replace('builtin:synthetic.browser.', '').replace('.load', '')}"
-            else:
-                warning_metrics = monitor_data[monitor_data['performance_status'] == 'Warning']['metric_name'].unique()
-                if len(warning_metrics) > 0:
-                    top_issue = f"Warning: {warning_metrics[0].replace('builtin:synthetic.browser.', '').replace('.load', '')}"
-                else:
-                    top_issue = 'None'
-            
             summary_rows.append({
                 'Monitor': monitor_name,
                 'Total_Measurements': len(monitor_data),
                 'Avg_Load_Time_ms': round(avg_load_time, 2),
-                'Availability_Percent': round(avg_availability, 2),
-                'Web_Vitals_Score': web_vitals_score,
-                'Overall_Grade': overall_grade,
-                'Top_Issue': top_issue,
-                'Good_Count': all_perf.get('Good', 0),
-                'Warning_Count': all_perf.get('Warning', 0),
-                'Critical_Count': all_perf.get('Critical', 0)
+                'Availability_Percent': round(avg_availability, 2)
             })
         
         # DataFrameに変換してCSV出力
@@ -937,12 +790,7 @@ def main():
             for category, count in category_stats.items():
                 print(f"   {category}: {count:,} レコード")
         
-        # パフォーマンス状況
-        if 'performance_status' in df.columns:
-            perf_counts = df['performance_status'].value_counts()
-            print(f"\nパフォーマンス状況:")
-            for status, count in perf_counts.items():
-                print(f"   {status}: {count:,} レコード")
+        # パフォーマンス評価機能は削除（純粋なデータ提供に特化）
         
         logger.info("処理完了")
         return 0
