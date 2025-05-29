@@ -1,6 +1,6 @@
 @echo off
 REM Synthetic Browser監視結果エクスポーター実行スクリプト (Windows版)
-REM 作成日: 2025-01-26
+REM 作成日: 2025-05-26
 
 echo Synthetic Browser監視結果エクスポーター
 echo 67個の動作確認済みメトリクスを活用した包括的データエクスポート
